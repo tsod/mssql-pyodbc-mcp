@@ -152,6 +152,19 @@ def test_service_routes_to_secondary_profile():
     assert "PWD=secondary-secret;" in fake_pyodbc.connection_strings[0]
 
 
+def test_service_routes_by_configured_database_name():
+    fake_pyodbc = FakePyodbc()
+    service = MssqlToolService(SECONDARY_ENV, pyodbc_module=fake_pyodbc)
+
+    result = service.test_connection(db="dw")
+
+    assert result["ok"] is True
+    assert result["db"] == "secondary"
+    assert result["server"] == "analytics,1433"
+    assert result["database"] == "dw"
+    assert "SERVER=analytics,1433;" in fake_pyodbc.connection_strings[0]
+
+
 def test_as_tool_response_returns_invalid_profile_error():
     service = MssqlToolService(ENV, pyodbc_module=FakePyodbc())
 

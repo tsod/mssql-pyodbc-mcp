@@ -58,6 +58,7 @@
 - PM decision: support exactly two profiles for CR-001, `default` and `secondary`.
 - PM decision: existing tools receive optional `db` selector, defaulting to `default`.
 - PM decision: secondary profile is optional and uses `MSSQL_SECONDARY_*` environment variables.
+- Product adjustment: agent-facing `db` selector can use the configured database name from `MSSQL_DATABASE` or `MSSQL_SECONDARY_DATABASE`; `secondary` remains supported for backward compatibility.
 - PM planning marks CR-001 Ready for PG.
 - PG branch: `pg/CR-001-multi-db-support`.
 - PG implementation completed two-profile support with optional `db` selector.

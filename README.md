@@ -9,7 +9,7 @@ Local stdio MCP server for read-only Microsoft SQL Server access through Python 
 - `describe_table`: returns simple column metadata.
 - `query`: executes read-only `SELECT` queries and returns at most 100 rows.
 
-The server supports a required `default` MSSQL profile and an optional `secondary` MSSQL profile. Both profiles use SQL username/password authentication.
+The server supports a required default MSSQL connection and an optional second MSSQL connection. Both connections use SQL username/password authentication. Agents can select a connection by passing either the internal profile name or the configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
 
 ## Environment Variables
 
@@ -26,7 +26,7 @@ Optional defaults:
 - `MSSQL_PORT=1433`
 - `MSSQL_TRUST_SERVER_CERTIFICATE=yes`
 
-Optional secondary profile:
+Optional second DB:
 
 - `MSSQL_SECONDARY_SERVER`
 - `MSSQL_SECONDARY_DATABASE`
@@ -69,7 +69,7 @@ export OPENSSL_CONF="$PWD/scripts/openssl-legacy.cnf"
 mssql-pyodbc-mcp
 ```
 
-To enable a second profile, also export:
+To enable a second DB, also export:
 
 ```bash
 export MSSQL_SECONDARY_SERVER=localhost
@@ -78,10 +78,19 @@ export MSSQL_SECONDARY_USER=other_user
 export MSSQL_SECONDARY_PASSWORD=other_password
 ```
 
-All tools accept an optional `db` argument:
+All tools accept an optional `db` argument. The most natural value is the configured database name:
+
+```json
+{"db": "MyDatabase", "sql": "SELECT TOP 10 * FROM dbo.Users"}
+{"db": "OtherDatabase", "sql": "SELECT TOP 10 * FROM dbo.Users"}
+```
+
+Selection rules:
 
 - `db="default"` uses `MSSQL_*` variables.
-- `db="secondary"` uses `MSSQL_SECONDARY_*` variables.
+- `db="<MSSQL_DATABASE value>"` uses `MSSQL_*` variables.
+- `db="<MSSQL_SECONDARY_DATABASE value>"` uses `MSSQL_SECONDARY_*` variables.
+- `db="secondary"` still works for backward compatibility.
 - Omitting `db` uses `default`.
 
 ## Live DB Checks
@@ -91,7 +100,7 @@ After exporting the environment variables, verify the local setup with:
 ```bash
 python scripts/check_odbc_connection.py
 python scripts/check_mcp_tools.py
-python scripts/check_mcp_tools.py secondary
+python scripts/check_mcp_tools.py OtherDatabase
 ```
 
 ## Codex MCP Example

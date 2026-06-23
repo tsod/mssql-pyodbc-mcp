@@ -7,7 +7,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 ## Authentication / Authorization
 
 - MCP layer: no separate user login in the first release.
-- Database layer: SQL Server username/password from environment variables for the selected DB profile.
+- Database layer: SQL Server username/password from environment variables for the selected DB target.
 - Authorization is delegated to the configured SQL Server account, with application-level read-only checks as an additional guard.
 
 ## Tools
@@ -16,7 +16,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 
 - Purpose: Validate environment configuration and confirm the MSSQL DB can be reached.
 - Input:
-  - `db`: optional string, defaults to `default`; allowed values are `default` and `secondary`.
+  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
 - Output:
   - `ok`: boolean
   - `db`: string
@@ -32,7 +32,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 
 - Purpose: Return available user tables.
 - Input:
-  - `db`: optional string, defaults to `default`; allowed values are `default` and `secondary`.
+  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
 - Output:
   - `db`: string
   - `server`: string
@@ -50,7 +50,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - Purpose: Return simple schema metadata for one table.
 - Input:
   - `table_name`: string, preferably schema-qualified such as `dbo.Users`
-  - `db`: optional string, defaults to `default`; allowed values are `default` and `secondary`.
+  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
 - Output:
   - `db`: string
   - `server`: string
@@ -71,7 +71,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - Purpose: Execute a read-only SELECT query and return structured results.
 - Input:
   - `sql`: string
-  - `db`: optional string, defaults to `default`; allowed values are `default` and `secondary`.
+  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
 - Output:
   - `db`: string
   - `server`: string
@@ -91,7 +91,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 ## Error Cases
 
 - `CONFIG_MISSING`: required environment variable is missing.
-- `CONFIG_INVALID`: environment variable is present but invalid, or an unknown DB profile is selected.
+- `CONFIG_INVALID`: environment variable is present but invalid, or an unknown DB selector is provided.
 - `CONNECTION_FAILED`: DB connection attempt failed.
 - `SQL_REJECTED`: SQL is not allowed by read-only policy.
 - `TABLE_NOT_FOUND`: requested table cannot be found.

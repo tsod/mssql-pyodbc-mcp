@@ -77,6 +77,23 @@ def test_secondary_profile_uses_prefixed_environment_variables():
     assert "PWD=secondary-secret;" in config.connection_string()
 
 
+def test_default_database_name_can_select_default_profile():
+    config = DatabaseConfig.from_env(SECONDARY_ENV, "appdb")
+
+    assert config.profile == "default"
+    assert config.server == "localhost"
+    assert config.database == "appdb"
+
+
+def test_secondary_database_name_can_select_secondary_profile():
+    config = DatabaseConfig.from_env(SECONDARY_ENV, "dw")
+
+    assert config.profile == "secondary"
+    assert config.server == "analytics"
+    assert config.database == "dw"
+    assert config.user == "reader"
+
+
 def test_blank_profile_defaults_to_default():
     config = DatabaseConfig.from_env(BASE_ENV, "")
 
@@ -89,7 +106,7 @@ def test_unknown_profile_is_rejected():
 
     payload = error.value.to_dict()
     assert payload["code"] == "CONFIG_INVALID"
-    assert payload["details"]["allowed"] == ["default", "secondary"]
+    assert payload["details"]["allowed"] == ["default", "secondary", "appdb"]
 
 
 def test_missing_secondary_profile_reports_prefixed_keys_without_secret_values():

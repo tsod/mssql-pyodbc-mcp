@@ -67,7 +67,7 @@
 
 ## Acceptance Criteria
 - `test_connection()` uses default profile and remains backward compatible.
-- `test_connection(db="secondary")` uses secondary variables when configured.
+- `test_connection(db="<MSSQL_SECONDARY_DATABASE value>")` uses secondary variables when configured.
 - `list_tables`, `describe_table`, and `query` can target `default` or `secondary`.
 - Invalid profile names return `CONFIG_INVALID`.
 - Selecting unconfigured `secondary` returns `CONFIG_MISSING` without exposing secrets.

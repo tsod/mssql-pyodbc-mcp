@@ -8,14 +8,14 @@
 
 - Provide agent-accessible MSSQL metadata inspection and read-only querying.
 - Let agents verify DB connectivity before running data operations.
-- Keep the runtime small: two fixed DB profiles at most, stdio transport, SQL username/password authentication.
+- Keep the runtime small: two configured DB targets at most, stdio transport, SQL username/password authentication.
 - Reduce accidental database mutation risk by rejecting non-read SQL and limiting query results.
 
 ## Scope
 
 - Python MCP server using pyodbc.
 - stdio transport for local Codex/agent usage.
-- One required default MSSQL DB profile and one optional secondary MSSQL DB profile configured through environment variables.
+- One required default MSSQL DB target and one optional second MSSQL DB target configured through environment variables.
 - SQL username/password authentication only.
 - MCP tools:
   - `test_connection`
@@ -28,7 +28,7 @@
 
 ## Out of Scope
 
-- More than two DB profiles.
+- More than two DB targets.
 - Remote HTTP/SSE MCP hosting.
 - Windows Authentication / trusted connection.
 - INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, or database administration actions.
@@ -56,10 +56,10 @@
   - `MSSQL_TRUST_SERVER_CERTIFICATE`
 - The server may also read optional secondary DB configuration from `MSSQL_SECONDARY_*` equivalents.
 - `test_connection` must validate selected DB configuration and attempt a lightweight DB connection.
-- `list_tables` must return user tables only for the selected DB profile.
-- `describe_table` must accept a table identifier and return simple column metadata for the selected DB profile.
-- `query` must accept arbitrary read-only SELECT SQL for the selected DB profile and return no more than 100 rows.
-- All MCP tools must accept an optional `db` selector with `default` as the default value and `secondary` as the optional second profile.
+- `list_tables` must return user tables only for the selected DB target.
+- `describe_table` must accept a table identifier and return simple column metadata for the selected DB target.
+- `query` must accept arbitrary read-only SELECT SQL for the selected DB target and return no more than 100 rows.
+- All MCP tools must accept an optional `db` selector with `default` as the default value; callers may pass the configured database name from `MSSQL_DATABASE` or `MSSQL_SECONDARY_DATABASE`.
 - Errors must be agent-readable and must not expose passwords or full sensitive connection strings.
 - Missing environment variables must be reported clearly.
 
@@ -70,16 +70,17 @@
 - `INSERT`, `UPDATE`, `DELETE`, and other mutating or schema-changing statements must be rejected.
 - Result sets must be limited to 100 rows even if the submitted SQL could return more.
 - The configured DB account should be read-only where practical; application-level SQL blocking is not the only protection.
-- The server supports exactly two profile names: `default` and `secondary`.
+- The server supports exactly two configured DB targets.
 - The `default` profile is required and uses `MSSQL_*` variables.
-- The `secondary` profile is optional and uses `MSSQL_SECONDARY_*` variables.
-- Selecting an unknown or unconfigured profile must return a safe configuration error.
+- The second profile is optional and uses `MSSQL_SECONDARY_*` variables.
+- Agent-facing DB selection should use configured database names where possible; `secondary` remains accepted for backward compatibility.
+- Selecting an unknown or unconfigured DB target must return a safe configuration error.
 
 ## Edge Cases
 
 - Required environment variable is missing or empty.
 - Secondary profile is selected but not configured.
-- Unknown DB profile selector is provided.
+- Unknown DB selector is provided.
 - ODBC driver is missing or misnamed.
 - SQL Server is unreachable.
 - Login fails.
@@ -96,7 +97,7 @@
 ## Domain Model
 
 - `DatabaseConfig`: environment-derived connection settings for one selected profile.
-- `DatabaseProfile`: profile selector such as `default` or `secondary`.
+- `DatabaseProfile`: internal profile selector such as `default` or `secondary`; callers may also select by configured database name.
 - `ConnectionCheck`: result of validating configuration and opening a connection.
 - `TableRef`: schema/name reference to a SQL Server user table.
 - `ColumnInfo`: simple table column metadata.

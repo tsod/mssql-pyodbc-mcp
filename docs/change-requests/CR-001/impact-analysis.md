@@ -22,7 +22,7 @@
 - Supported profile names are fixed as `default` and `secondary`.
 - The `default` profile is required and maps to the existing `MSSQL_*` variables.
 - The `secondary` profile is optional and maps to `MSSQL_SECONDARY_*` variables.
-- A caller may pass `db="default"` or `db="secondary"` to select a target.
+- A caller may pass `db="<configured database name>"` to select a target; `db="default"` and `db="secondary"` remain accepted as internal profile selectors.
 - Omitting `db` is equivalent to `db="default"`.
 - Calling `secondary` when it is not configured returns a safe configuration error.
 - All profiles use SQL username/password authentication.
@@ -30,7 +30,7 @@
 
 ### Workflow Rules
 - Agent starts MCP server using environment variables.
-- Agent may call `test_connection()` for default or `test_connection(db="secondary")` for the second DB.
+- Agent may call `test_connection()` for default or `test_connection(db="<MSSQL_SECONDARY_DATABASE value>")` for the second DB.
 - Agent uses the same target selection pattern for table listing, schema inspection, and query execution.
 - Tool responses include the selected `db` profile name in safe response metadata.
 

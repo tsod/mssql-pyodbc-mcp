@@ -16,25 +16,25 @@ def create_server() -> Any:
 
     @app.tool()
     def test_connection(db: str = "default") -> dict[str, Any]:
-        """Validate MSSQL environment configuration and test database connectivity."""
+        """Validate MSSQL configuration and connectivity. db may be a profile or configured database name."""
 
         return as_tool_response(service.test_connection, db)
 
     @app.tool()
     def list_tables(db: str = "default") -> dict[str, Any]:
-        """List accessible user tables in the selected MSSQL database."""
+        """List accessible user tables. db may be a profile or configured database name."""
 
         return as_tool_response(service.list_tables, db)
 
     @app.tool()
     def describe_table(table_name: str, db: str = "default") -> dict[str, Any]:
-        """Return column_name, data_type, and nullable for a table."""
+        """Return column_name, data_type, and nullable. db may be a profile or configured database name."""
 
         return as_tool_response(service.describe_table, table_name, db)
 
     @app.tool()
     def query(sql: str, db: str = "default") -> dict[str, Any]:
-        """Execute a read-only SELECT query and return at most 100 rows."""
+        """Execute a read-only SELECT query. db may be a profile or configured database name."""
 
         return as_tool_response(service.query, sql, db)
 

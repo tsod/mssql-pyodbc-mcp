@@ -28,7 +28,7 @@ class DatabaseConfig:
 
     @classmethod
     def from_env(cls, env: Mapping[str, str], profile: str = PROFILE_DEFAULT) -> "DatabaseConfig":
-        profile = normalize_profile(profile)
+        profile = resolve_profile(env, profile)
         missing = [env_key(profile, key) for key in REQUIRED_ENV_VARS if not env.get(env_key(profile, key), "").strip()]
         if missing:
             raise ToolError(
@@ -96,18 +96,39 @@ class DatabaseConfig:
         )
 
 
-def normalize_profile(profile: str | None) -> str:
+def resolve_profile(env: Mapping[str, str], profile: str | None) -> str:
     if profile is None or not profile.strip():
         return PROFILE_DEFAULT
 
     normalized = profile.strip().lower()
     if normalized not in ALLOWED_PROFILES:
+        matched_profile = match_database_name(env, normalized)
+        if matched_profile is not None:
+            return matched_profile
+
         raise ToolError(
             "CONFIG_INVALID",
-            "Unknown MSSQL DB profile.",
-            {"db": normalized, "allowed": list(ALLOWED_PROFILES)},
+            "Unknown MSSQL DB selector.",
+            {"db": normalized, "allowed": allowed_db_values(env)},
         )
     return normalized
+
+
+def match_database_name(env: Mapping[str, str], database_name: str) -> str | None:
+    for profile in ALLOWED_PROFILES:
+        configured_database = env.get(env_key(profile, "MSSQL_DATABASE"), "").strip().lower()
+        if configured_database and configured_database == database_name:
+            return profile
+    return None
+
+
+def allowed_db_values(env: Mapping[str, str]) -> list[str]:
+    values = list(ALLOWED_PROFILES)
+    for profile in ALLOWED_PROFILES:
+        database = env.get(env_key(profile, "MSSQL_DATABASE"), "").strip()
+        if database and database.lower() not in {value.lower() for value in values}:
+            values.append(database)
+    return values
 
 
 def env_key(profile: str, key: str) -> str:
