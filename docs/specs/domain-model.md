@@ -4,8 +4,9 @@
 
 ### DatabaseConfig
 
-- Purpose: Holds environment-derived DB connection settings.
+- Purpose: Holds environment-derived DB connection settings for one selected profile.
 - Key Fields:
+  - `profile`
   - `server`
   - `database`
   - `user`
@@ -22,6 +23,7 @@
 - Purpose: Represents connection validation result.
 - Key Fields:
   - `ok`
+  - `db`
   - `message`
   - `server`
   - `database`
@@ -54,6 +56,7 @@
 - Purpose: Represents a submitted read-only SQL query.
 - Key Fields:
   - `sql`
+  - `db`
 - Relationships:
   - Validated by SQL policy before execution.
 
@@ -83,12 +86,14 @@
 
 - Stateless server process.
 - Environment configuration is read at startup or per tool call.
+- Tool calls resolve the selected DB profile before creating a connection.
 - DB connections are opened for tool execution or managed through a lightweight connection helper.
 - No application state is persisted.
 
 ## Business Constraints
 
-- One configured database profile in the first release.
+- Two fixed profile names are supported: `default` and `secondary`.
+- `default` is required; `secondary` is optional.
 - Read-only operations only.
 - Maximum query result size is 100 rows.
 - SQL username/password authentication only.

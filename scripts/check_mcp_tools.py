@@ -20,11 +20,12 @@ def quote_identifier(identifier: str) -> str:
 
 def main() -> int:
     service = MssqlToolService()
+    db = sys.argv[1] if len(sys.argv) > 1 else "default"
 
     try:
-        dump("test_connection", service.test_connection())
+        dump(f"test_connection {db}", service.test_connection(db=db))
 
-        table_result = service.list_tables()
+        table_result = service.list_tables(db=db)
         tables = table_result.get("tables", [])
         dump(
             "list_tables_first_10",
@@ -41,12 +42,12 @@ def main() -> int:
 
         first_table = tables[0]
         full_name = first_table["full_name"]
-        dump(f"describe_table {full_name}", service.describe_table(full_name))
+        dump(f"describe_table {db} {full_name}", service.describe_table(full_name, db=db))
 
         schema = quote_identifier(first_table["schema"])
         name = quote_identifier(first_table["name"])
         sql = f"SELECT TOP (5) * FROM {schema}.{name}"
-        dump(f"query {sql}", service.query(sql))
+        dump(f"query {db} {sql}", service.query(sql, db=db))
         return 0
     except ToolError as exc:
         dump("tool_error", exc.to_dict())

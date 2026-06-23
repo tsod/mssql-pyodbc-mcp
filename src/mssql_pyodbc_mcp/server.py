@@ -15,28 +15,28 @@ def create_server() -> Any:
     service = MssqlToolService()
 
     @app.tool()
-    def test_connection() -> dict[str, Any]:
+    def test_connection(db: str = "default") -> dict[str, Any]:
         """Validate MSSQL environment configuration and test database connectivity."""
 
-        return as_tool_response(service.test_connection)
+        return as_tool_response(service.test_connection, db)
 
     @app.tool()
-    def list_tables() -> dict[str, Any]:
-        """List accessible user tables in the configured MSSQL database."""
+    def list_tables(db: str = "default") -> dict[str, Any]:
+        """List accessible user tables in the selected MSSQL database."""
 
-        return as_tool_response(service.list_tables)
+        return as_tool_response(service.list_tables, db)
 
     @app.tool()
-    def describe_table(table_name: str) -> dict[str, Any]:
+    def describe_table(table_name: str, db: str = "default") -> dict[str, Any]:
         """Return column_name, data_type, and nullable for a table."""
 
-        return as_tool_response(service.describe_table, table_name)
+        return as_tool_response(service.describe_table, table_name, db)
 
     @app.tool()
-    def query(sql: str) -> dict[str, Any]:
+    def query(sql: str, db: str = "default") -> dict[str, Any]:
         """Execute a read-only SELECT query and return at most 100 rows."""
 
-        return as_tool_response(service.query, sql)
+        return as_tool_response(service.query, sql, db)
 
     return app
 

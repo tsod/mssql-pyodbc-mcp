@@ -4,7 +4,7 @@ import os
 from collections.abc import Mapping
 from typing import Any
 
-from .config import DatabaseConfig
+from .config import PROFILE_DEFAULT, DatabaseConfig
 from .db import ConnectionFactory, DatabaseClient
 from .errors import ToolError
 from .sql_policy import validate_read_only_sql
@@ -15,21 +15,21 @@ class MssqlToolService:
         self.env = env if env is not None else os.environ
         self.pyodbc_module = pyodbc_module
 
-    def test_connection(self) -> dict[str, Any]:
-        return self._client().test_connection()
+    def test_connection(self, db: str = PROFILE_DEFAULT) -> dict[str, Any]:
+        return self._client(db).test_connection()
 
-    def list_tables(self) -> dict[str, Any]:
-        return self._client().list_tables()
+    def list_tables(self, db: str = PROFILE_DEFAULT) -> dict[str, Any]:
+        return self._client(db).list_tables()
 
-    def describe_table(self, table_name: str) -> dict[str, Any]:
-        return self._client().describe_table(table_name)
+    def describe_table(self, table_name: str, db: str = PROFILE_DEFAULT) -> dict[str, Any]:
+        return self._client(db).describe_table(table_name)
 
-    def query(self, sql: str) -> dict[str, Any]:
+    def query(self, sql: str, db: str = PROFILE_DEFAULT) -> dict[str, Any]:
         safe_sql = validate_read_only_sql(sql)
-        return self._client().execute_query(safe_sql)
+        return self._client(db).execute_query(safe_sql)
 
-    def _client(self) -> DatabaseClient:
-        config = DatabaseConfig.from_env(self.env)
+    def _client(self, db: str = PROFILE_DEFAULT) -> DatabaseClient:
+        config = DatabaseConfig.from_env(self.env, db)
         return DatabaseClient(ConnectionFactory(config, pyodbc_module=self.pyodbc_module))
 
 

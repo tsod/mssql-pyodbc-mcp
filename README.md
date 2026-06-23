@@ -9,7 +9,7 @@ Local stdio MCP server for read-only Microsoft SQL Server access through Python 
 - `describe_table`: returns simple column metadata.
 - `query`: executes read-only `SELECT` queries and returns at most 100 rows.
 
-The first release supports one configured MSSQL database and SQL username/password authentication only.
+The server supports a required `default` MSSQL profile and an optional `secondary` MSSQL profile. Both profiles use SQL username/password authentication.
 
 ## Environment Variables
 
@@ -25,6 +25,16 @@ Optional defaults:
 - `MSSQL_DRIVER=ODBC Driver 18 for SQL Server`
 - `MSSQL_PORT=1433`
 - `MSSQL_TRUST_SERVER_CERTIFICATE=yes`
+
+Optional secondary profile:
+
+- `MSSQL_SECONDARY_SERVER`
+- `MSSQL_SECONDARY_DATABASE`
+- `MSSQL_SECONDARY_USER`
+- `MSSQL_SECONDARY_PASSWORD`
+- `MSSQL_SECONDARY_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_SECONDARY_PORT=1433`
+- `MSSQL_SECONDARY_TRUST_SERVER_CERTIFICATE=yes`
 
 The implementation sets `Encrypt=no` and passes `TrustServerCertificate` from the environment. For production-like environments, use a properly trusted server certificate and tighten encryption settings before exposing the server beyond local agent usage.
 
@@ -59,6 +69,21 @@ export OPENSSL_CONF="$PWD/scripts/openssl-legacy.cnf"
 mssql-pyodbc-mcp
 ```
 
+To enable a second profile, also export:
+
+```bash
+export MSSQL_SECONDARY_SERVER=localhost
+export MSSQL_SECONDARY_DATABASE=OtherDatabase
+export MSSQL_SECONDARY_USER=other_user
+export MSSQL_SECONDARY_PASSWORD=other_password
+```
+
+All tools accept an optional `db` argument:
+
+- `db="default"` uses `MSSQL_*` variables.
+- `db="secondary"` uses `MSSQL_SECONDARY_*` variables.
+- Omitting `db` uses `default`.
+
 ## Live DB Checks
 
 After exporting the environment variables, verify the local setup with:
@@ -66,6 +91,7 @@ After exporting the environment variables, verify the local setup with:
 ```bash
 python scripts/check_odbc_connection.py
 python scripts/check_mcp_tools.py
+python scripts/check_mcp_tools.py secondary
 ```
 
 ## Codex MCP Example

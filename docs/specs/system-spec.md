@@ -2,20 +2,20 @@
 
 ## Product Summary
 
-`mssql-pyodbc-mcp` is a local stdio MCP server that lets Codex and agent workflows inspect and query one configured Microsoft SQL Server database through Python and pyodbc. The first release is read-only, environment-configured, and intended for local developer/agent runtime use.
+`mssql-pyodbc-mcp` is a local stdio MCP server that lets Codex and agent workflows inspect and query configured Microsoft SQL Server databases through Python and pyodbc. The server is read-only, environment-configured, and intended for local developer/agent runtime use.
 
 ## Goals
 
 - Provide agent-accessible MSSQL metadata inspection and read-only querying.
 - Let agents verify DB connectivity before running data operations.
-- Keep the first release small: one DB profile, stdio transport, SQL username/password authentication.
+- Keep the runtime small: two fixed DB profiles at most, stdio transport, SQL username/password authentication.
 - Reduce accidental database mutation risk by rejecting non-read SQL and limiting query results.
 
 ## Scope
 
 - Python MCP server using pyodbc.
 - stdio transport for local Codex/agent usage.
-- One MSSQL DB configured through environment variables.
+- One required default MSSQL DB profile and one optional secondary MSSQL DB profile configured through environment variables.
 - SQL username/password authentication only.
 - MCP tools:
   - `test_connection`
@@ -28,7 +28,7 @@
 
 ## Out of Scope
 
-- Multiple DB profiles.
+- More than two DB profiles.
 - Remote HTTP/SSE MCP hosting.
 - Windows Authentication / trusted connection.
 - INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, or database administration actions.
@@ -54,10 +54,12 @@
   - `MSSQL_DRIVER`
   - `MSSQL_PORT`
   - `MSSQL_TRUST_SERVER_CERTIFICATE`
-- `test_connection` must validate required configuration and attempt a lightweight DB connection.
-- `list_tables` must return user tables only.
-- `describe_table` must accept a table identifier and return simple column metadata.
-- `query` must accept arbitrary read-only SELECT SQL and return no more than 100 rows.
+- The server may also read optional secondary DB configuration from `MSSQL_SECONDARY_*` equivalents.
+- `test_connection` must validate selected DB configuration and attempt a lightweight DB connection.
+- `list_tables` must return user tables only for the selected DB profile.
+- `describe_table` must accept a table identifier and return simple column metadata for the selected DB profile.
+- `query` must accept arbitrary read-only SELECT SQL for the selected DB profile and return no more than 100 rows.
+- All MCP tools must accept an optional `db` selector with `default` as the default value and `secondary` as the optional second profile.
 - Errors must be agent-readable and must not expose passwords or full sensitive connection strings.
 - Missing environment variables must be reported clearly.
 
@@ -68,11 +70,16 @@
 - `INSERT`, `UPDATE`, `DELETE`, and other mutating or schema-changing statements must be rejected.
 - Result sets must be limited to 100 rows even if the submitted SQL could return more.
 - The configured DB account should be read-only where practical; application-level SQL blocking is not the only protection.
-- The first release supports exactly one configured DB profile.
+- The server supports exactly two profile names: `default` and `secondary`.
+- The `default` profile is required and uses `MSSQL_*` variables.
+- The `secondary` profile is optional and uses `MSSQL_SECONDARY_*` variables.
+- Selecting an unknown or unconfigured profile must return a safe configuration error.
 
 ## Edge Cases
 
 - Required environment variable is missing or empty.
+- Secondary profile is selected but not configured.
+- Unknown DB profile selector is provided.
 - ODBC driver is missing or misnamed.
 - SQL Server is unreachable.
 - Login fails.
@@ -88,7 +95,8 @@
 
 ## Domain Model
 
-- `DatabaseConfig`: environment-derived connection settings.
+- `DatabaseConfig`: environment-derived connection settings for one selected profile.
+- `DatabaseProfile`: profile selector such as `default` or `secondary`.
 - `ConnectionCheck`: result of validating configuration and opening a connection.
 - `TableRef`: schema/name reference to a SQL Server user table.
 - `ColumnInfo`: simple table column metadata.
@@ -112,10 +120,10 @@
 
 1. MCP client starts the server over stdio.
 2. Server loads and validates environment configuration lazily at tool execution time or startup.
-3. Agent calls `test_connection`.
-4. Agent calls `list_tables`.
-5. Agent calls `describe_table` for relevant tables.
-6. Agent calls `query` with SELECT SQL.
+3. Agent calls `test_connection` with optional `db`.
+4. Agent calls `list_tables` with optional `db`.
+5. Agent calls `describe_table` for relevant tables with optional `db`.
+6. Agent calls `query` with SELECT SQL and optional `db`.
 7. Server validates SQL, executes read-only query, fetches up to 100 rows, serializes results, and returns them.
 8. On invalid configuration, blocked SQL, or DB errors, server returns safe structured errors.
 
@@ -148,17 +156,14 @@
 ## Acceptance Criteria
 
 - Codex can start the MCP server through stdio.
-- `test_connection` returns success when valid MSSQL environment variables and DB access are present.
-- `list_tables` returns user tables.
-- `describe_table` returns `column_name`, `data_type`, and `nullable` for a selected table.
-- `query` executes valid SELECT SQL and returns at most 100 rows.
+- `test_connection` returns success when valid selected MSSQL environment variables and DB access are present.
+- `list_tables` returns user tables for `default` or `secondary`.
+- `describe_table` returns `column_name`, `data_type`, and `nullable` for a selected table in `default` or `secondary`.
+- `query` executes valid SELECT SQL against `default` or `secondary` and returns at most 100 rows.
 - `query` supports common SELECT constructs including CTE, joins, filters, grouping, ordering, and subqueries.
 - Attempts to run INSERT, UPDATE, DELETE, DDL, EXEC, or multiple mutating statements are rejected.
 - Missing or invalid configuration returns safe, agent-readable errors.
 
 ## Open Questions
 
-- Confirm default values for `MSSQL_DRIVER`, `MSSQL_PORT`, and `MSSQL_TRUST_SERVER_CERTIFICATE`.
-- Decide whether `describe_table` should require schema-qualified names or allow unqualified names with ambiguity errors.
-- Decide whether row limiting should be implemented by cursor fetch limit only, SQL wrapping, or both.
-- Decide the exact MCP error response shape used by the selected Python MCP library.
+- None for the current implemented scope.

@@ -79,7 +79,7 @@ class DatabaseClient:
             {"schema": row[0], "name": row[1], "full_name": f"{row[0]}.{row[1]}"}
             for row in rows
         ]
-        return {"ok": True, "tables": tables}
+        return {"ok": True, **self.factory.config.safe_identity(), "tables": tables}
 
     def describe_table(self, table_name: str) -> dict[str, Any]:
         schema, name = parse_table_name(table_name)
@@ -122,7 +122,7 @@ class DatabaseClient:
             {"column_name": row[0], "data_type": row[1], "nullable": str(row[2]).upper() == "YES"}
             for row in rows
         ]
-        return {"ok": True, "table": f"{schema}.{name}", "columns": columns}
+        return {"ok": True, **self.factory.config.safe_identity(), "table": f"{schema}.{name}", "columns": columns}
 
     def execute_query(self, sql: str) -> dict[str, Any]:
         connection = self.factory.connect()
@@ -135,6 +135,7 @@ class DatabaseClient:
             columns = [description[0] for description in (cursor.description or [])]
             return {
                 "ok": True,
+                **self.factory.config.safe_identity(),
                 "columns": columns,
                 "rows": [row_to_dict(columns, row) for row in rows],
                 "row_count": len(rows),
