@@ -9,31 +9,32 @@
 - Last Updated: 2026-06-23
 
 ## Current Stage
-- Stage: CRA
+- Stage: PM
 - Status: Ready for Next Stage
-- Owner: CRA
+- Owner: PM
 
 ## Completed
 - [ ] RA handoff
 - [ ] Requirements confirmed
 - [ ] Project planning documents
 - [x] Change request
-- [ ] Impact analysis
-- [ ] Implementation plan
-- [ ] Ready for PG
+- [x] Impact analysis
+- [x] Implementation plan
+- [x] Ready for PG
 - [ ] PG implementation
 - [ ] Verification
 
 ## Current Output Files
 - `/mnt/d/AIProject/Workspaces/mssql-pyodbc-mcp/docs/change-requests/CR-001/change-request.md`
+- `/mnt/d/AIProject/Workspaces/mssql-pyodbc-mcp/docs/change-requests/CR-001/impact-analysis.md`
+- `/mnt/d/AIProject/Workspaces/mssql-pyodbc-mcp/docs/change-requests/CR-001/implementation-plan.md`
 - `/mnt/d/AIProject/Workspaces/mssql-pyodbc-mcp/docs/change-requests/CR-001/pm-team-status.md`
 
 ## Next Action
-- PM change kickoff should analyze CR-001, resolve DB profile/API selector decisions, and produce `impact-analysis.md` plus `implementation-plan.md`.
+- PG implementation should start from `docs/change-requests/CR-001/implementation-plan.md` on a new implementation branch.
 
 ## Blockers
-- None for CRA discovery.
-- PM/SA/SD should resolve the open questions before implementation starts.
+- None.
 
 ## Decisions
 - CR number: CR-001.
@@ -41,6 +42,10 @@
 - Project path resolved from current working directory.
 - Change request scope captured as adding one additional MSSQL DB profile to the existing MCP server.
 - CRA stage does not implement code or modify base project specs.
+- PM decision: support exactly two profiles for CR-001, `default` and `secondary`.
+- PM decision: existing tools receive optional `db` selector, defaulting to `default`.
+- PM decision: secondary profile is optional and uses `MSSQL_SECONDARY_*` environment variables.
+- PM planning marks CR-001 Ready for PG.
 
 ## Notifications
 - Telegram: Skipped
@@ -50,3 +55,4 @@
 ## Notes
 - User explicitly invoked `CRA agent`; workflow stops after CRA completion.
 - `change-request.md` marks Ready for PM as `Yes`; API/configuration choices remain open for PM/SA/SD planning.
+- User later requested PM agent implementation; PM planning completed and PG implementation is authorized.
