@@ -8,14 +8,14 @@
 
 - Provide agent-accessible MSSQL metadata inspection and read-only querying.
 - Let agents verify DB connectivity before running data operations.
-- Keep the runtime small: two configured DB targets at most, stdio transport, SQL username/password authentication.
+- Keep the runtime small: one required default DB target plus supported optional named DB targets, stdio transport, SQL username/password authentication.
 - Reduce accidental database mutation risk by rejecting non-read SQL and limiting query results.
 
 ## Scope
 
 - Python MCP server using pyodbc.
 - stdio transport for local Codex/agent usage.
-- One required default MSSQL DB target and one optional second MSSQL DB target configured through environment variables.
+- One required default MSSQL DB target and four optional MSSQL DB targets configured through environment variables.
 - SQL username/password authentication only.
 - MCP tools:
   - `test_connection`
@@ -28,7 +28,7 @@
 
 ## Out of Scope
 
-- More than two DB targets.
+- DB targets beyond the supported fixed profiles.
 - Remote HTTP/SSE MCP hosting.
 - Windows Authentication / trusted connection.
 - INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, or database administration actions.
@@ -54,12 +54,12 @@
   - `MSSQL_DRIVER`
   - `MSSQL_PORT`
   - `MSSQL_TRUST_SERVER_CERTIFICATE`
-- The server may also read optional secondary DB configuration from `MSSQL_SECONDARY_*` equivalents.
+- The server may also read optional DB configuration from `MSSQL_SECONDARY_*`, `MSSQL_TEND_*`, `MSSQL_PROJECTWORKTRACKER_*`, and `MSSQL_TWNTAXIAD_*` equivalents.
 - `test_connection` must validate selected DB configuration and attempt a lightweight DB connection.
 - `list_tables` must return user tables only for the selected DB target.
 - `describe_table` must accept a table identifier and return simple column metadata for the selected DB target.
 - `query` must accept arbitrary read-only SELECT SQL for the selected DB target and return no more than 100 rows.
-- All MCP tools must accept an optional `db` selector with `default` as the default value; callers may pass the configured database name from `MSSQL_DATABASE` or `MSSQL_SECONDARY_DATABASE`.
+- All MCP tools must accept an optional `db` selector with `default` as the default value; callers may pass supported profile selectors or the configured database name from any configured profile.
 - Errors must be agent-readable and must not expose passwords or full sensitive connection strings.
 - Missing environment variables must be reported clearly.
 
@@ -70,16 +70,20 @@
 - `INSERT`, `UPDATE`, `DELETE`, and other mutating or schema-changing statements must be rejected.
 - Result sets must be limited to 100 rows even if the submitted SQL could return more.
 - The configured DB account should be read-only where practical; application-level SQL blocking is not the only protection.
-- The server supports exactly two configured DB targets.
+- The server supports one required default DB target and four optional DB targets.
 - The `default` profile is required and uses `MSSQL_*` variables.
 - The second profile is optional and uses `MSSQL_SECONDARY_*` variables.
-- Agent-facing DB selection should use configured database names where possible; `secondary` remains accepted for backward compatibility.
+- Three additional named profiles are optional and use `MSSQL_TEND_*`, `MSSQL_PROJECTWORKTRACKER_*`, and `MSSQL_TWNTAXIAD_*` variables.
+- Agent-facing DB selection may use `default`, `secondary`, `Tend`, `ProjectWorkTracker`, `TWNTaxiAD`, or configured database names.
+- Profile selectors are case-insensitive.
 - Selecting an unknown or unconfigured DB target must return a safe configuration error.
 
 ## Edge Cases
 
 - Required environment variable is missing or empty.
 - Secondary profile is selected but not configured.
+- Named optional profile is selected but not configured.
+- Named optional profile is partially configured.
 - Unknown DB selector is provided.
 - ODBC driver is missing or misnamed.
 - SQL Server is unreachable.
@@ -97,7 +101,7 @@
 ## Domain Model
 
 - `DatabaseConfig`: environment-derived connection settings for one selected profile.
-- `DatabaseProfile`: internal profile selector such as `default` or `secondary`; callers may also select by configured database name.
+- `DatabaseProfile`: internal profile selector such as `default`, `secondary`, `tend`, `projectworktracker`, or `twntaxiad`; callers may also select by configured database name.
 - `ConnectionCheck`: result of validating configuration and opening a connection.
 - `TableRef`: schema/name reference to a SQL Server user table.
 - `ColumnInfo`: simple table column metadata.
@@ -158,9 +162,9 @@
 
 - Codex can start the MCP server through stdio.
 - `test_connection` returns success when valid selected MSSQL environment variables and DB access are present.
-- `list_tables` returns user tables for `default` or `secondary`.
-- `describe_table` returns `column_name`, `data_type`, and `nullable` for a selected table in `default` or `secondary`.
-- `query` executes valid SELECT SQL against `default` or `secondary` and returns at most 100 rows.
+- `list_tables` returns user tables for any configured supported profile.
+- `describe_table` returns `column_name`, `data_type`, and `nullable` for a selected table in any configured supported profile.
+- `query` executes valid SELECT SQL against any configured supported profile and returns at most 100 rows.
 - `query` supports common SELECT constructs including CTE, joins, filters, grouping, ordering, and subqueries.
 - Attempts to run INSERT, UPDATE, DELETE, DDL, EXEC, or multiple mutating statements are rejected.
 - Missing or invalid configuration returns safe, agent-readable errors.

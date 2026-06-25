@@ -9,7 +9,7 @@ Local stdio MCP server for read-only Microsoft SQL Server access through Python 
 - `describe_table`: returns simple column metadata.
 - `query`: executes read-only `SELECT` queries and returns at most 100 rows.
 
-The server supports a required default MSSQL connection and an optional second MSSQL connection. Both connections use SQL username/password authentication. Agents can select a connection by passing either the internal profile name or the configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
+The server supports a required default MSSQL connection plus optional named MSSQL connections. All connections use SQL username/password authentication. Agents can select a connection by passing either the internal profile name or the configured database name from any configured profile.
 
 ## Environment Variables
 
@@ -35,6 +35,30 @@ Optional second DB:
 - `MSSQL_SECONDARY_DRIVER=ODBC Driver 18 for SQL Server`
 - `MSSQL_SECONDARY_PORT=1433`
 - `MSSQL_SECONDARY_TRUST_SERVER_CERTIFICATE=yes`
+
+Optional named DBs:
+
+- `MSSQL_TEND_SERVER`
+- `MSSQL_TEND_DATABASE`
+- `MSSQL_TEND_USER`
+- `MSSQL_TEND_PASSWORD`
+- `MSSQL_TEND_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_TEND_PORT=1433`
+- `MSSQL_TEND_TRUST_SERVER_CERTIFICATE=yes`
+- `MSSQL_PROJECTWORKTRACKER_SERVER`
+- `MSSQL_PROJECTWORKTRACKER_DATABASE`
+- `MSSQL_PROJECTWORKTRACKER_USER`
+- `MSSQL_PROJECTWORKTRACKER_PASSWORD`
+- `MSSQL_PROJECTWORKTRACKER_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_PROJECTWORKTRACKER_PORT=1433`
+- `MSSQL_PROJECTWORKTRACKER_TRUST_SERVER_CERTIFICATE=yes`
+- `MSSQL_TWNTAXIAD_SERVER`
+- `MSSQL_TWNTAXIAD_DATABASE`
+- `MSSQL_TWNTAXIAD_USER`
+- `MSSQL_TWNTAXIAD_PASSWORD`
+- `MSSQL_TWNTAXIAD_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_TWNTAXIAD_PORT=1433`
+- `MSSQL_TWNTAXIAD_TRUST_SERVER_CERTIFICATE=yes`
 
 The implementation sets `Encrypt=no` and passes `TrustServerCertificate` from the environment. For production-like environments, use a properly trusted server certificate and tighten encryption settings before exposing the server beyond local agent usage.
 
@@ -78,19 +102,33 @@ export MSSQL_SECONDARY_USER=other_user
 export MSSQL_SECONDARY_PASSWORD=other_password
 ```
 
+To enable a named DB, export its matching group:
+
+```bash
+export MSSQL_TEND_SERVER=localhost
+export MSSQL_TEND_DATABASE=Tend
+export MSSQL_TEND_USER=tend_user
+export MSSQL_TEND_PASSWORD=tend_password
+```
+
 All tools accept an optional `db` argument. The most natural value is the configured database name:
 
 ```json
 {"db": "MyDatabase", "sql": "SELECT TOP 10 * FROM dbo.Users"}
 {"db": "OtherDatabase", "sql": "SELECT TOP 10 * FROM dbo.Users"}
+{"db": "Tend", "sql": "SELECT TOP 10 * FROM dbo.Users"}
 ```
 
 Selection rules:
 
 - `db="default"` uses `MSSQL_*` variables.
+- `db="Tend"` uses `MSSQL_TEND_*` variables.
+- `db="ProjectWorkTracker"` uses `MSSQL_PROJECTWORKTRACKER_*` variables.
+- `db="TWNTaxiAD"` uses `MSSQL_TWNTAXIAD_*` variables.
 - `db="<MSSQL_DATABASE value>"` uses `MSSQL_*` variables.
-- `db="<MSSQL_SECONDARY_DATABASE value>"` uses `MSSQL_SECONDARY_*` variables.
+- `db="<configured database name>"` uses the matching configured profile.
 - `db="secondary"` still works for backward compatibility.
+- Profile selectors are case-insensitive.
 - Omitting `db` uses `default`.
 
 ## Live DB Checks
@@ -101,6 +139,7 @@ After exporting the environment variables, verify the local setup with:
 python scripts/check_odbc_connection.py
 python scripts/check_mcp_tools.py
 python scripts/check_mcp_tools.py OtherDatabase
+python scripts/check_mcp_tools.py Tend
 ```
 
 ## Codex MCP Example

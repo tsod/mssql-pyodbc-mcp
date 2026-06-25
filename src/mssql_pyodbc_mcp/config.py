@@ -11,8 +11,34 @@ DEFAULT_PORT = 1433
 DEFAULT_TRUST_SERVER_CERTIFICATE = "yes"
 PROFILE_DEFAULT = "default"
 PROFILE_SECONDARY = "secondary"
-ALLOWED_PROFILES = (PROFILE_DEFAULT, PROFILE_SECONDARY)
+PROFILE_TEND = "tend"
+PROFILE_PROJECTWORKTRACKER = "projectworktracker"
+PROFILE_TWNTAXIAD = "twntaxiad"
 REQUIRED_ENV_VARS = ("MSSQL_SERVER", "MSSQL_DATABASE", "MSSQL_USER", "MSSQL_PASSWORD")
+
+
+@dataclass(frozen=True)
+class DatabaseProfileDefinition:
+    profile: str
+    display_name: str
+    env_prefix: str
+    required: bool = False
+
+
+PROFILE_DEFINITIONS = (
+    DatabaseProfileDefinition(PROFILE_DEFAULT, "default", "MSSQL", required=True),
+    DatabaseProfileDefinition(PROFILE_SECONDARY, "secondary", "MSSQL_SECONDARY"),
+    DatabaseProfileDefinition(PROFILE_TEND, "Tend", "MSSQL_TEND"),
+    DatabaseProfileDefinition(PROFILE_PROJECTWORKTRACKER, "ProjectWorkTracker", "MSSQL_PROJECTWORKTRACKER"),
+    DatabaseProfileDefinition(PROFILE_TWNTAXIAD, "TWNTaxiAD", "MSSQL_TWNTAXIAD"),
+)
+ALLOWED_PROFILES = tuple(definition.profile for definition in PROFILE_DEFINITIONS)
+PROFILE_DEFINITIONS_BY_ID = {definition.profile: definition for definition in PROFILE_DEFINITIONS}
+PROFILE_IDS_BY_SELECTOR = {
+    selector.lower(): definition.profile
+    for definition in PROFILE_DEFINITIONS
+    for selector in (definition.profile, definition.display_name)
+}
 
 
 @dataclass(frozen=True)
@@ -101,7 +127,8 @@ def resolve_profile(env: Mapping[str, str], profile: str | None) -> str:
         return PROFILE_DEFAULT
 
     normalized = profile.strip().lower()
-    if normalized not in ALLOWED_PROFILES:
+    matched_selector = PROFILE_IDS_BY_SELECTOR.get(normalized)
+    if matched_selector is None:
         matched_profile = match_database_name(env, normalized)
         if matched_profile is not None:
             return matched_profile
@@ -111,7 +138,7 @@ def resolve_profile(env: Mapping[str, str], profile: str | None) -> str:
             "Unknown MSSQL DB selector.",
             {"db": normalized, "allowed": allowed_db_values(env)},
         )
-    return normalized
+    return matched_selector
 
 
 def match_database_name(env: Mapping[str, str], database_name: str) -> str | None:
@@ -123,7 +150,7 @@ def match_database_name(env: Mapping[str, str], database_name: str) -> str | Non
 
 
 def allowed_db_values(env: Mapping[str, str]) -> list[str]:
-    values = list(ALLOWED_PROFILES)
+    values = [definition.display_name for definition in PROFILE_DEFINITIONS]
     for profile in ALLOWED_PROFILES:
         database = env.get(env_key(profile, "MSSQL_DATABASE"), "").strip()
         if database and database.lower() not in {value.lower() for value in values}:
@@ -132,6 +159,7 @@ def allowed_db_values(env: Mapping[str, str]) -> list[str]:
 
 
 def env_key(profile: str, key: str) -> str:
-    if profile == PROFILE_DEFAULT:
+    definition = PROFILE_DEFINITIONS_BY_ID[profile]
+    if definition.profile == PROFILE_DEFAULT:
         return key
-    return key.replace("MSSQL_", "MSSQL_SECONDARY_", 1)
+    return key.replace("MSSQL", definition.env_prefix, 1)

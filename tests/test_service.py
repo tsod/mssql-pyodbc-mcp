@@ -19,6 +19,22 @@ SECONDARY_ENV = {
     "MSSQL_SECONDARY_PASSWORD": "secondary-secret",
 }
 
+NAMED_ENV = {
+    **SECONDARY_ENV,
+    "MSSQL_TEND_SERVER": "tend-host",
+    "MSSQL_TEND_DATABASE": "TendDb",
+    "MSSQL_TEND_USER": "tend-user",
+    "MSSQL_TEND_PASSWORD": "tend-secret",
+    "MSSQL_PROJECTWORKTRACKER_SERVER": "tracker-host",
+    "MSSQL_PROJECTWORKTRACKER_DATABASE": "ProjectWorkTrackerDb",
+    "MSSQL_PROJECTWORKTRACKER_USER": "tracker-user",
+    "MSSQL_PROJECTWORKTRACKER_PASSWORD": "tracker-secret",
+    "MSSQL_TWNTAXIAD_SERVER": "taxi-host",
+    "MSSQL_TWNTAXIAD_DATABASE": "TWNTaxiADDb",
+    "MSSQL_TWNTAXIAD_USER": "taxi-user",
+    "MSSQL_TWNTAXIAD_PASSWORD": "taxi-secret",
+}
+
 
 class FakeCursor:
     def __init__(self):
@@ -163,6 +179,59 @@ def test_service_routes_by_configured_database_name():
     assert result["server"] == "analytics,1433"
     assert result["database"] == "dw"
     assert "SERVER=analytics,1433;" in fake_pyodbc.connection_strings[0]
+
+
+def test_service_routes_to_tend_profile():
+    fake_pyodbc = FakePyodbc()
+    service = MssqlToolService(NAMED_ENV, pyodbc_module=fake_pyodbc)
+
+    result = service.test_connection(db="Tend")
+
+    assert result["ok"] is True
+    assert result["db"] == "tend"
+    assert result["server"] == "tend-host,1433"
+    assert result["database"] == "TendDb"
+    assert "SERVER=tend-host,1433;" in fake_pyodbc.connection_strings[0]
+    assert "UID=tend-user;" in fake_pyodbc.connection_strings[0]
+    assert "PWD=tend-secret;" in fake_pyodbc.connection_strings[0]
+
+
+def test_service_routes_to_projectworktracker_profile():
+    fake_pyodbc = FakePyodbc()
+    service = MssqlToolService(NAMED_ENV, pyodbc_module=fake_pyodbc)
+
+    result = service.test_connection(db="ProjectWorkTracker")
+
+    assert result["ok"] is True
+    assert result["db"] == "projectworktracker"
+    assert result["server"] == "tracker-host,1433"
+    assert result["database"] == "ProjectWorkTrackerDb"
+    assert "SERVER=tracker-host,1433;" in fake_pyodbc.connection_strings[0]
+
+
+def test_service_routes_to_twntaxiad_profile():
+    fake_pyodbc = FakePyodbc()
+    service = MssqlToolService(NAMED_ENV, pyodbc_module=fake_pyodbc)
+
+    result = service.test_connection(db="TWNTaxiAD")
+
+    assert result["ok"] is True
+    assert result["db"] == "twntaxiad"
+    assert result["server"] == "taxi-host,1433"
+    assert result["database"] == "TWNTaxiADDb"
+    assert "SERVER=taxi-host,1433;" in fake_pyodbc.connection_strings[0]
+
+
+def test_service_routes_named_profile_by_configured_database_name():
+    fake_pyodbc = FakePyodbc()
+    service = MssqlToolService(NAMED_ENV, pyodbc_module=fake_pyodbc)
+
+    result = service.test_connection(db="TendDb")
+
+    assert result["ok"] is True
+    assert result["db"] == "tend"
+    assert result["database"] == "TendDb"
+    assert "SERVER=tend-host,1433;" in fake_pyodbc.connection_strings[0]
 
 
 def test_as_tool_response_returns_invalid_profile_error():

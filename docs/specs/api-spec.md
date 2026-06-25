@@ -16,7 +16,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 
 - Purpose: Validate environment configuration and confirm the MSSQL DB can be reached.
 - Input:
-  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
+  - `db`: optional string, defaults to `default`; accepts supported profile selectors or a configured database name.
 - Output:
   - `ok`: boolean
   - `db`: string
@@ -32,7 +32,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 
 - Purpose: Return available user tables.
 - Input:
-  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
+  - `db`: optional string, defaults to `default`; accepts supported profile selectors or a configured database name.
 - Output:
   - `db`: string
   - `server`: string
@@ -50,7 +50,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - Purpose: Return simple schema metadata for one table.
 - Input:
   - `table_name`: string, preferably schema-qualified such as `dbo.Users`
-  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
+  - `db`: optional string, defaults to `default`; accepts supported profile selectors or a configured database name.
 - Output:
   - `db`: string
   - `server`: string
@@ -71,7 +71,7 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - Purpose: Execute a read-only SELECT query and return structured results.
 - Input:
   - `sql`: string
-  - `db`: optional string, defaults to `default`; accepts `default`, `secondary`, or a configured database name from `MSSQL_DATABASE` / `MSSQL_SECONDARY_DATABASE`.
+  - `db`: optional string, defaults to `default`; accepts supported profile selectors or a configured database name.
 - Output:
   - `db`: string
   - `server`: string
@@ -115,9 +115,38 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - `MSSQL_SECONDARY_DRIVER`: optional secondary ODBC driver name.
 - `MSSQL_SECONDARY_PORT`: optional secondary SQL Server port.
 - `MSSQL_SECONDARY_TRUST_SERVER_CERTIFICATE`: optional secondary trust server certificate flag.
+- `MSSQL_TEND_SERVER`: optional Tend SQL Server hostname or address.
+- `MSSQL_TEND_DATABASE`: optional Tend database name.
+- `MSSQL_TEND_USER`: optional Tend SQL login username.
+- `MSSQL_TEND_PASSWORD`: optional Tend SQL login password.
+- `MSSQL_TEND_DRIVER`: optional Tend ODBC driver name.
+- `MSSQL_TEND_PORT`: optional Tend SQL Server port.
+- `MSSQL_TEND_TRUST_SERVER_CERTIFICATE`: optional Tend trust server certificate flag.
+- `MSSQL_PROJECTWORKTRACKER_SERVER`: optional ProjectWorkTracker SQL Server hostname or address.
+- `MSSQL_PROJECTWORKTRACKER_DATABASE`: optional ProjectWorkTracker database name.
+- `MSSQL_PROJECTWORKTRACKER_USER`: optional ProjectWorkTracker SQL login username.
+- `MSSQL_PROJECTWORKTRACKER_PASSWORD`: optional ProjectWorkTracker SQL login password.
+- `MSSQL_PROJECTWORKTRACKER_DRIVER`: optional ProjectWorkTracker ODBC driver name.
+- `MSSQL_PROJECTWORKTRACKER_PORT`: optional ProjectWorkTracker SQL Server port.
+- `MSSQL_PROJECTWORKTRACKER_TRUST_SERVER_CERTIFICATE`: optional ProjectWorkTracker trust server certificate flag.
+- `MSSQL_TWNTAXIAD_SERVER`: optional TWNTaxiAD SQL Server hostname or address.
+- `MSSQL_TWNTAXIAD_DATABASE`: optional TWNTaxiAD database name.
+- `MSSQL_TWNTAXIAD_USER`: optional TWNTaxiAD SQL login username.
+- `MSSQL_TWNTAXIAD_PASSWORD`: optional TWNTaxiAD SQL login password.
+- `MSSQL_TWNTAXIAD_DRIVER`: optional TWNTaxiAD ODBC driver name.
+- `MSSQL_TWNTAXIAD_PORT`: optional TWNTaxiAD SQL Server port.
+- `MSSQL_TWNTAXIAD_TRUST_SERVER_CERTIFICATE`: optional TWNTaxiAD trust server certificate flag.
 
 ## Notes
 
+- Supported `db` profile selectors:
+  - `default`
+  - `secondary`
+  - `Tend`
+  - `ProjectWorkTracker`
+  - `TWNTaxiAD`
+- Profile selectors are case-insensitive.
+- Callers may also select by a configured database name from any configured profile.
 - Defaults:
   - `MSSQL_PORT`: `1433`
   - `MSSQL_TRUST_SERVER_CERTIFICATE`: `yes`

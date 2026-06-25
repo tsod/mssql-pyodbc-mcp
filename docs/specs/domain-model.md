@@ -2,6 +2,23 @@
 
 ## Entities
 
+### DatabaseProfile
+
+- Purpose: Describes one supported DB target profile and its environment variable prefix.
+- Key Fields:
+  - `profile`
+  - `display_name`
+  - `env_prefix`
+  - `required`
+- Supported Profiles:
+  - `default`: `MSSQL_*`, required
+  - `secondary`: `MSSQL_SECONDARY_*`, optional
+  - `tend`: `MSSQL_TEND_*`, optional
+  - `projectworktracker`: `MSSQL_PROJECTWORKTRACKER_*`, optional
+  - `twntaxiad`: `MSSQL_TWNTAXIAD_*`, optional
+- Relationships:
+  - Used to resolve `db` selectors before creating `DatabaseConfig`.
+
 ### DatabaseConfig
 
 - Purpose: Holds environment-derived DB connection settings for one selected DB target.
@@ -92,9 +109,10 @@
 
 ## Business Constraints
 
-- Two configured DB targets are supported.
-- `default` is required; the second target is optional.
-- Callers may select by `default`, `secondary`, or the configured database name.
+- One required default DB target and four optional DB targets are supported.
+- `default` is required; `secondary`, `tend`, `projectworktracker`, and `twntaxiad` are optional.
+- Callers may select by supported profile selector or configured database name.
+- Profile selectors are case-insensitive.
 - Read-only operations only.
 - Maximum query result size is 100 rows.
 - SQL username/password authentication only.
