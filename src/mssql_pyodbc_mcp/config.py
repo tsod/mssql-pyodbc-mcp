@@ -10,10 +10,13 @@ DEFAULT_DRIVER = "ODBC Driver 18 for SQL Server"
 DEFAULT_PORT = 1433
 DEFAULT_TRUST_SERVER_CERTIFICATE = "yes"
 PROFILE_DEFAULT = "default"
-PROFILE_SECONDARY = "secondary"
+PROFILE_GLOBAL_BUSINESS = "global_business"
 PROFILE_TEND = "tend"
 PROFILE_PROJECTWORKTRACKER = "projectworktracker"
 PROFILE_TWNTAXIAD = "twntaxiad"
+PROFILE_254GLOBAL = "254global"
+PROFILE_TWNTAXIAD53 = "twntaxiad53"
+RETIRED_DB_SELECTORS = frozenset({"secondary"})
 REQUIRED_ENV_VARS = ("MSSQL_SERVER", "MSSQL_DATABASE", "MSSQL_USER", "MSSQL_PASSWORD")
 
 
@@ -27,10 +30,12 @@ class DatabaseProfileDefinition:
 
 PROFILE_DEFINITIONS = (
     DatabaseProfileDefinition(PROFILE_DEFAULT, "default", "MSSQL", required=True),
-    DatabaseProfileDefinition(PROFILE_SECONDARY, "secondary", "MSSQL_SECONDARY"),
+    DatabaseProfileDefinition(PROFILE_GLOBAL_BUSINESS, "GlobalBusiness", "MSSQL_GLOBAL_BUSINESS"),
     DatabaseProfileDefinition(PROFILE_TEND, "Tend", "MSSQL_TEND"),
     DatabaseProfileDefinition(PROFILE_PROJECTWORKTRACKER, "ProjectWorkTracker", "MSSQL_PROJECTWORKTRACKER"),
     DatabaseProfileDefinition(PROFILE_TWNTAXIAD, "TWNTaxiAD", "MSSQL_TWNTAXIAD"),
+    DatabaseProfileDefinition(PROFILE_254GLOBAL, "254global", "MSSQL_254GLOBAL"),
+    DatabaseProfileDefinition(PROFILE_TWNTAXIAD53, "TWTaxiAD53", "MSSQL_TWNTAXIAD53"),
 )
 ALLOWED_PROFILES = tuple(definition.profile for definition in PROFILE_DEFINITIONS)
 PROFILE_DEFINITIONS_BY_ID = {definition.profile: definition for definition in PROFILE_DEFINITIONS}
@@ -127,6 +132,13 @@ def resolve_profile(env: Mapping[str, str], profile: str | None) -> str:
         return PROFILE_DEFAULT
 
     normalized = profile.strip().lower()
+    if normalized in RETIRED_DB_SELECTORS:
+        raise ToolError(
+            "CONFIG_INVALID",
+            "Unknown MSSQL DB selector.",
+            {"db": normalized, "allowed": allowed_db_values(env)},
+        )
+
     matched_selector = PROFILE_IDS_BY_SELECTOR.get(normalized)
     if matched_selector is None:
         matched_profile = match_database_name(env, normalized)
@@ -153,6 +165,8 @@ def allowed_db_values(env: Mapping[str, str]) -> list[str]:
     values = [definition.display_name for definition in PROFILE_DEFINITIONS]
     for profile in ALLOWED_PROFILES:
         database = env.get(env_key(profile, "MSSQL_DATABASE"), "").strip()
+        if database.lower() in RETIRED_DB_SELECTORS:
+            continue
         if database and database.lower() not in {value.lower() for value in values}:
             values.append(database)
     return values
