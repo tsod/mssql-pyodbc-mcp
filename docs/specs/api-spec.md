@@ -108,13 +108,13 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - `MSSQL_DRIVER`: ODBC driver name.
 - `MSSQL_PORT`: SQL Server port.
 - `MSSQL_TRUST_SERVER_CERTIFICATE`: whether to trust server certificate.
-- `MSSQL_SECONDARY_SERVER`: optional secondary SQL Server hostname or address.
-- `MSSQL_SECONDARY_DATABASE`: optional secondary database name.
-- `MSSQL_SECONDARY_USER`: optional secondary SQL login username.
-- `MSSQL_SECONDARY_PASSWORD`: optional secondary SQL login password.
-- `MSSQL_SECONDARY_DRIVER`: optional secondary ODBC driver name.
-- `MSSQL_SECONDARY_PORT`: optional secondary SQL Server port.
-- `MSSQL_SECONDARY_TRUST_SERVER_CERTIFICATE`: optional secondary trust server certificate flag.
+- `MSSQL_GLOBAL_BUSINESS_SERVER`: optional Global Business SQL Server hostname or address.
+- `MSSQL_GLOBAL_BUSINESS_DATABASE`: optional Global Business database name.
+- `MSSQL_GLOBAL_BUSINESS_USER`: optional Global Business SQL login username.
+- `MSSQL_GLOBAL_BUSINESS_PASSWORD`: optional Global Business SQL login password.
+- `MSSQL_GLOBAL_BUSINESS_DRIVER`: optional Global Business ODBC driver name.
+- `MSSQL_GLOBAL_BUSINESS_PORT`: optional Global Business SQL Server port.
+- `MSSQL_GLOBAL_BUSINESS_TRUST_SERVER_CERTIFICATE`: optional Global Business trust server certificate flag.
 - `MSSQL_TEND_SERVER`: optional Tend SQL Server hostname or address.
 - `MSSQL_TEND_DATABASE`: optional Tend database name.
 - `MSSQL_TEND_USER`: optional Tend SQL login username.
@@ -136,17 +136,35 @@ This project exposes MCP tools over stdio. It does not expose HTTP endpoints. To
 - `MSSQL_TWNTAXIAD_DRIVER`: optional TWNTaxiAD ODBC driver name.
 - `MSSQL_TWNTAXIAD_PORT`: optional TWNTaxiAD SQL Server port.
 - `MSSQL_TWNTAXIAD_TRUST_SERVER_CERTIFICATE`: optional TWNTaxiAD trust server certificate flag.
+- `MSSQL_254GLOBAL_SERVER`: optional 254global SQL Server hostname or address.
+- `MSSQL_254GLOBAL_DATABASE`: optional 254global database name.
+- `MSSQL_254GLOBAL_USER`: optional 254global SQL login username.
+- `MSSQL_254GLOBAL_PASSWORD`: optional 254global SQL login password.
+- `MSSQL_254GLOBAL_DRIVER`: optional 254global ODBC driver name.
+- `MSSQL_254GLOBAL_PORT`: optional 254global SQL Server port.
+- `MSSQL_254GLOBAL_TRUST_SERVER_CERTIFICATE`: optional 254global trust server certificate flag.
+- `MSSQL_TWNTAXIAD53_SERVER`: optional TWTaxiAD53 SQL Server hostname or address.
+- `MSSQL_TWNTAXIAD53_DATABASE`: optional TWTaxiAD53 database name.
+- `MSSQL_TWNTAXIAD53_USER`: optional TWTaxiAD53 SQL login username.
+- `MSSQL_TWNTAXIAD53_PASSWORD`: optional TWTaxiAD53 SQL login password.
+- `MSSQL_TWNTAXIAD53_DRIVER`: optional TWTaxiAD53 ODBC driver name.
+- `MSSQL_TWNTAXIAD53_PORT`: optional TWTaxiAD53 SQL Server port.
+- `MSSQL_TWNTAXIAD53_TRUST_SERVER_CERTIFICATE`: optional TWTaxiAD53 trust server certificate flag.
 
 ## Notes
 
 - Supported `db` profile selectors:
   - `default`
-  - `secondary`
+  - `GlobalBusiness`
   - `Tend`
   - `ProjectWorkTracker`
   - `TWNTaxiAD`
+  - `254global`
+  - `TWTaxiAD53`
 - Profile selectors are case-insensitive.
 - Callers may also select by a configured database name from any configured profile.
+- Successful responses use the resolved internal profile ID, including `global_business` and `twntaxiad53`.
+- The retired `secondary` selector returns `CONFIG_INVALID` and is not accepted through database-name fallback.
 - Defaults:
   - `MSSQL_PORT`: `1433`
   - `MSSQL_TRUST_SERVER_CERTIFICATE`: `yes`

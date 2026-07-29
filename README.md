@@ -26,15 +26,15 @@ Optional defaults:
 - `MSSQL_PORT=1433`
 - `MSSQL_TRUST_SERVER_CERTIFICATE=yes`
 
-Optional second DB:
+Optional Global Business DB:
 
-- `MSSQL_SECONDARY_SERVER`
-- `MSSQL_SECONDARY_DATABASE`
-- `MSSQL_SECONDARY_USER`
-- `MSSQL_SECONDARY_PASSWORD`
-- `MSSQL_SECONDARY_DRIVER=ODBC Driver 18 for SQL Server`
-- `MSSQL_SECONDARY_PORT=1433`
-- `MSSQL_SECONDARY_TRUST_SERVER_CERTIFICATE=yes`
+- `MSSQL_GLOBAL_BUSINESS_SERVER`
+- `MSSQL_GLOBAL_BUSINESS_DATABASE`
+- `MSSQL_GLOBAL_BUSINESS_USER`
+- `MSSQL_GLOBAL_BUSINESS_PASSWORD`
+- `MSSQL_GLOBAL_BUSINESS_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_GLOBAL_BUSINESS_PORT=1433`
+- `MSSQL_GLOBAL_BUSINESS_TRUST_SERVER_CERTIFICATE=yes`
 
 Optional named DBs:
 
@@ -59,6 +59,22 @@ Optional named DBs:
 - `MSSQL_TWNTAXIAD_DRIVER=ODBC Driver 18 for SQL Server`
 - `MSSQL_TWNTAXIAD_PORT=1433`
 - `MSSQL_TWNTAXIAD_TRUST_SERVER_CERTIFICATE=yes`
+- `MSSQL_254GLOBAL_SERVER`
+- `MSSQL_254GLOBAL_DATABASE`
+- `MSSQL_254GLOBAL_USER`
+- `MSSQL_254GLOBAL_PASSWORD`
+- `MSSQL_254GLOBAL_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_254GLOBAL_PORT=1433`
+- `MSSQL_254GLOBAL_TRUST_SERVER_CERTIFICATE=yes`
+- `MSSQL_TWNTAXIAD53_SERVER`
+- `MSSQL_TWNTAXIAD53_DATABASE`
+- `MSSQL_TWNTAXIAD53_USER`
+- `MSSQL_TWNTAXIAD53_PASSWORD`
+- `MSSQL_TWNTAXIAD53_DRIVER=ODBC Driver 18 for SQL Server`
+- `MSSQL_TWNTAXIAD53_PORT=1433`
+- `MSSQL_TWNTAXIAD53_TRUST_SERVER_CERTIFICATE=yes`
+
+`GlobalBusiness` replaces the former `secondary` profile. `MSSQL_SECONDARY_*` variables and `db="secondary"` are not supported.
 
 The implementation sets `Encrypt=no` and passes `TrustServerCertificate` from the environment. For production-like environments, use a properly trusted server certificate and tighten encryption settings before exposing the server beyond local agent usage.
 
@@ -93,13 +109,13 @@ export OPENSSL_CONF="$PWD/scripts/openssl-legacy.cnf"
 mssql-pyodbc-mcp
 ```
 
-To enable a second DB, also export:
+To enable Global Business, also export:
 
 ```bash
-export MSSQL_SECONDARY_SERVER=localhost
-export MSSQL_SECONDARY_DATABASE=OtherDatabase
-export MSSQL_SECONDARY_USER=other_user
-export MSSQL_SECONDARY_PASSWORD=other_password
+export MSSQL_GLOBAL_BUSINESS_SERVER=localhost
+export MSSQL_GLOBAL_BUSINESS_DATABASE=GlobalBusinessDb
+export MSSQL_GLOBAL_BUSINESS_USER=global_business_user
+export MSSQL_GLOBAL_BUSINESS_PASSWORD=global_business_password
 ```
 
 To enable a named DB, export its matching group:
@@ -111,23 +127,36 @@ export MSSQL_TEND_USER=tend_user
 export MSSQL_TEND_PASSWORD=tend_password
 ```
 
+For `TWTaxiAD53`, use its separate group; it does not reuse `MSSQL_TWNTAXIAD_*`:
+
+```bash
+export MSSQL_TWNTAXIAD53_SERVER=localhost
+export MSSQL_TWNTAXIAD53_DATABASE=TWTaxiAD53
+export MSSQL_TWNTAXIAD53_USER=twtaxiad53_user
+export MSSQL_TWNTAXIAD53_PASSWORD=twtaxiad53_password
+```
+
 All tools accept an optional `db` argument. The most natural value is the configured database name:
 
 ```json
 {"db": "MyDatabase", "sql": "SELECT TOP 10 * FROM dbo.Users"}
-{"db": "OtherDatabase", "sql": "SELECT TOP 10 * FROM dbo.Users"}
+{"db": "GlobalBusiness", "sql": "SELECT TOP 10 * FROM dbo.Users"}
 {"db": "Tend", "sql": "SELECT TOP 10 * FROM dbo.Users"}
+{"db": "TWTaxiAD53", "sql": "SELECT TOP 10 * FROM dbo.Users"}
 ```
 
 Selection rules:
 
 - `db="default"` uses `MSSQL_*` variables.
+- `db="GlobalBusiness"` uses `MSSQL_GLOBAL_BUSINESS_*` variables.
 - `db="Tend"` uses `MSSQL_TEND_*` variables.
 - `db="ProjectWorkTracker"` uses `MSSQL_PROJECTWORKTRACKER_*` variables.
 - `db="TWNTaxiAD"` uses `MSSQL_TWNTAXIAD_*` variables.
+- `db="254global"` uses `MSSQL_254GLOBAL_*` variables.
+- `db="TWTaxiAD53"` uses `MSSQL_TWNTAXIAD53_*` variables.
 - `db="<MSSQL_DATABASE value>"` uses `MSSQL_*` variables.
 - `db="<configured database name>"` uses the matching configured profile.
-- `db="secondary"` still works for backward compatibility.
+- `db="secondary"` is retired and returns `CONFIG_INVALID`.
 - Profile selectors are case-insensitive.
 - Omitting `db` uses `default`.
 
@@ -138,8 +167,11 @@ After exporting the environment variables, verify the local setup with:
 ```bash
 python scripts/check_odbc_connection.py
 python scripts/check_mcp_tools.py
-python scripts/check_mcp_tools.py OtherDatabase
+python scripts/check_mcp_tools.py GlobalBusiness
 python scripts/check_mcp_tools.py Tend
+python scripts/check_mcp_tools.py TWNTaxiAD
+python scripts/check_mcp_tools.py 254global
+python scripts/check_mcp_tools.py TWTaxiAD53
 ```
 
 ## Codex MCP Example

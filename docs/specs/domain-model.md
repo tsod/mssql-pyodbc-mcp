@@ -12,10 +12,12 @@
   - `required`
 - Supported Profiles:
   - `default`: `MSSQL_*`, required
-  - `secondary`: `MSSQL_SECONDARY_*`, optional
+  - `global_business`: `MSSQL_GLOBAL_BUSINESS_*`, optional
   - `tend`: `MSSQL_TEND_*`, optional
   - `projectworktracker`: `MSSQL_PROJECTWORKTRACKER_*`, optional
   - `twntaxiad`: `MSSQL_TWNTAXIAD_*`, optional
+  - `254global`: `MSSQL_254GLOBAL_*`, optional
+  - `twntaxiad53`: `MSSQL_TWNTAXIAD53_*`, optional
 - Relationships:
   - Used to resolve `db` selectors before creating `DatabaseConfig`.
 
@@ -109,10 +111,11 @@
 
 ## Business Constraints
 
-- One required default DB target and four optional DB targets are supported.
-- `default` is required; `secondary`, `tend`, `projectworktracker`, and `twntaxiad` are optional.
+- One required default DB target and six optional DB targets are supported.
+- `default` is required; `global_business`, `tend`, `projectworktracker`, `twntaxiad`, `254global`, and `twntaxiad53` are optional.
 - Callers may select by supported profile selector or configured database name.
 - Profile selectors are case-insensitive.
+- `secondary` is retired and must be rejected before configured database-name matching.
 - Read-only operations only.
 - Maximum query result size is 100 rows.
 - SQL username/password authentication only.

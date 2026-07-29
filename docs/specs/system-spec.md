@@ -15,7 +15,7 @@
 
 - Python MCP server using pyodbc.
 - stdio transport for local Codex/agent usage.
-- One required default MSSQL DB target and four optional MSSQL DB targets configured through environment variables.
+- One required default MSSQL DB target and six optional MSSQL DB targets configured through environment variables.
 - SQL username/password authentication only.
 - MCP tools:
   - `test_connection`
@@ -54,7 +54,7 @@
   - `MSSQL_DRIVER`
   - `MSSQL_PORT`
   - `MSSQL_TRUST_SERVER_CERTIFICATE`
-- The server may also read optional DB configuration from `MSSQL_SECONDARY_*`, `MSSQL_TEND_*`, `MSSQL_PROJECTWORKTRACKER_*`, and `MSSQL_TWNTAXIAD_*` equivalents.
+- The server may also read optional DB configuration from `MSSQL_GLOBAL_BUSINESS_*`, `MSSQL_TEND_*`, `MSSQL_PROJECTWORKTRACKER_*`, `MSSQL_TWNTAXIAD_*`, `MSSQL_254GLOBAL_*`, and `MSSQL_TWNTAXIAD53_*` equivalents.
 - `test_connection` must validate selected DB configuration and attempt a lightweight DB connection.
 - `list_tables` must return user tables only for the selected DB target.
 - `describe_table` must accept a table identifier and return simple column metadata for the selected DB target.
@@ -70,20 +70,23 @@
 - `INSERT`, `UPDATE`, `DELETE`, and other mutating or schema-changing statements must be rejected.
 - Result sets must be limited to 100 rows even if the submitted SQL could return more.
 - The configured DB account should be read-only where practical; application-level SQL blocking is not the only protection.
-- The server supports one required default DB target and four optional DB targets.
+- The server supports one required default DB target and six optional DB targets.
 - The `default` profile is required and uses `MSSQL_*` variables.
-- The second profile is optional and uses `MSSQL_SECONDARY_*` variables.
-- Three additional named profiles are optional and use `MSSQL_TEND_*`, `MSSQL_PROJECTWORKTRACKER_*`, and `MSSQL_TWNTAXIAD_*` variables.
-- Agent-facing DB selection may use `default`, `secondary`, `Tend`, `ProjectWorkTracker`, `TWNTaxiAD`, or configured database names.
+- The Global Business profile is optional and uses `MSSQL_GLOBAL_BUSINESS_*` variables.
+- Five additional named profiles are optional and use `MSSQL_TEND_*`, `MSSQL_PROJECTWORKTRACKER_*`, `MSSQL_TWNTAXIAD_*`, `MSSQL_254GLOBAL_*`, and `MSSQL_TWNTAXIAD53_*` variables.
+- Agent-facing DB selection may use `default`, `GlobalBusiness`, `Tend`, `ProjectWorkTracker`, `TWNTaxiAD`, `254global`, `TWTaxiAD53`, or configured database names.
+- The retired `secondary` selector must return a safe unknown-selector error and must not resolve through configured database-name fallback.
 - Profile selectors are case-insensitive.
 - Selecting an unknown or unconfigured DB target must return a safe configuration error.
 
 ## Edge Cases
 
 - Required environment variable is missing or empty.
-- Secondary profile is selected but not configured.
+- Global Business profile is selected but not configured.
+- Retired `secondary` selector is provided.
 - Named optional profile is selected but not configured.
 - Named optional profile is partially configured.
+- `TWNTaxiAD` and `TWTaxiAD53` are configured independently.
 - Unknown DB selector is provided.
 - ODBC driver is missing or misnamed.
 - SQL Server is unreachable.
@@ -101,7 +104,7 @@
 ## Domain Model
 
 - `DatabaseConfig`: environment-derived connection settings for one selected profile.
-- `DatabaseProfile`: internal profile selector such as `default`, `secondary`, `tend`, `projectworktracker`, or `twntaxiad`; callers may also select by configured database name.
+- `DatabaseProfile`: internal profile selector such as `default`, `global_business`, `tend`, `projectworktracker`, `twntaxiad`, `254global`, or `twntaxiad53`; callers may also select by configured database name.
 - `ConnectionCheck`: result of validating configuration and opening a connection.
 - `TableRef`: schema/name reference to a SQL Server user table.
 - `ColumnInfo`: simple table column metadata.
